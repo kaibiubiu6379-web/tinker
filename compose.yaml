@@ -1,0 +1,15 @@
+services:
+  domain-tool:
+    build:
+      context: .
+    ports:
+      - "5000:5000"
+    environment:
+      TINKER_USERNAME: "${TINKER_USERNAME:-admin}"
+      TINKER_PASSWORD: "${TINKER_PASSWORD:?Set TINKER_PASSWORD in .env}"
+      TINKER_SECRET_KEY: "${TINKER_SECRET_KEY:?Set TINKER_SECRET_KEY in .env}"
+      TINKER_SECURE_COOKIE: "${TINKER_SECURE_COOKIE:-0}"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp

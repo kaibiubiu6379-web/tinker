@@ -1,0 +1,11 @@
+.git
+.gitignore
+.venv
+.env
+__pycache__
+*.py[cod]
+*.xlsx
+*.xls
+*.csv
+domain.txt
+tests

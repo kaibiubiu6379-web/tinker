@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>域名整理工具</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="域名整理工具首页">
+      <span class="brand-mark small" aria-hidden="true">D</span>
+      <span>域名整理工具</span>
+    </a>
+    <button id="logout-button" class="text-button" type="button">退出登录</button>
+  </header>
+
+  <main class="workspace">
+    <section class="hero">
+      <span class="eyebrow">DOMAIN TO EXCEL</span>
+      <h1>整理域名，只需一步</h1>
+      <p>选择上传文本文件，或直接粘贴原始内容。系统会按分类整理并返回 Excel。</p>
+    </section>
+
+    <section class="panel converter-panel">
+      <div class="field-row">
+        <div>
+          <label for="title">Excel 标题</label>
+          <input id="title" type="text" maxlength="80" value="域名信息">
+        </div>
+        <div class="format-note">
+          <span>输出顺序</span>
+          <strong>WEB → H5 → APP → 后台</strong>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="数据输入方式">
+        <button class="tab active" id="text-tab" type="button" role="tab" aria-selected="true" aria-controls="text-panel">粘贴文本</button>
+        <button class="tab" id="file-tab" type="button" role="tab" aria-selected="false" aria-controls="file-panel">上传文件</button>
+      </div>
+
+      <div id="text-panel" class="tab-panel" role="tabpanel" aria-labelledby="text-tab">
+        <label for="text-input">原始域名内容</label>
+        <textarea id="text-input" rows="12" placeholder="在这里粘贴 domain.txt 中的内容……"></textarea>
+        <div class="textarea-meta"><span id="char-count">0 个字符</span></div>
+      </div>
+
+      <div id="file-panel" class="tab-panel" role="tabpanel" aria-labelledby="file-tab" hidden>
+        <input id="file-input" class="visually-hidden" type="file" accept=".txt,.log,text/plain">
+        <label id="drop-zone" class="drop-zone" for="file-input">
+          <span class="upload-icon" aria-hidden="true">↑</span>
+          <strong>点击选择或拖入文本文件</strong>
+          <span>支持 TXT、LOG，最大 2 MB</span>
+        </label>
+        <div id="file-card" class="file-card" hidden>
+          <div class="file-badge" aria-hidden="true">TXT</div>
+          <div class="file-details">
+            <strong id="file-name"></strong>
+            <span id="file-size"></span>
+          </div>
+          <button id="remove-file" class="icon-button" type="button" aria-label="移除文件">×</button>
+        </div>
+      </div>
+
+      <p id="status-message" class="message" role="status" aria-live="polite" hidden></p>
+      <button id="convert-button" class="primary-button convert-button" type="button">
+        <span>生成并下载 Excel</span>
+      </button>
+    </section>
+
+    <section class="steps" aria-label="处理说明">
+      <div><span>01</span><strong>读取</strong><p>识别域名、状态与到期时间</p></div>
+      <div><span>02</span><strong>分类</strong><p>按照固定业务分类顺序整理</p></div>
+      <div><span>03</span><strong>下载</strong><p>自动生成规范的 Excel 文件</p></div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>

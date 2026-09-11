@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登录 · 域名整理工具</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-body">
+  <main class="login-shell">
+    <section class="login-copy" aria-label="产品介绍">
+      <span class="eyebrow">DOMAIN WORKSPACE</span>
+      <h1>把零散域名<br>整理成清晰表格</h1>
+      <p>上传文本或直接粘贴内容，系统将自动分类并生成 Excel。</p>
+    </section>
+
+    <section class="panel login-panel">
+      <div class="brand-mark" aria-hidden="true">D</div>
+      <div>
+        <p class="kicker">欢迎回来</p>
+        <h2>登录工作台</h2>
+      </div>
+      <form id="login-form" novalidate>
+        <label for="username">用户名</label>
+        <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+
+        <label for="password">密码</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+        <p id="login-error" class="message error" role="alert" hidden></p>
+        <button id="login-button" class="primary-button" type="submit">登录</button>
+      </form>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='login.js') }}" defer></script>
+</body>
+</html>
