@@ -4,6 +4,7 @@
 import re
 import argparse
 import sys
+from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from collections import defaultdict
@@ -87,6 +88,22 @@ def infer_category_from_header(lines, domain_index):
     return "未分类"
 
 
+def is_record_expired(status, expire_date, remaining_days=None, now=None):
+    """Determine expiry from explicit status, absolute date, or negative days."""
+    if status == "过期":
+        return True
+
+    if expire_date:
+        try:
+            expires_at = datetime.strptime(expire_date, "%Y-%m-%d %H:%M:%S")
+            if expires_at <= (now or datetime.now()):
+                return True
+        except ValueError:
+            pass
+
+    return remaining_days is not None and remaining_days < 0
+
+
 def parse_text(text):
     """Parse domain records from pasted or uploaded text."""
     lines = [
@@ -107,6 +124,7 @@ def parse_text(text):
         if not domain_match:
             continue
 
+        status = re.match(r'^(正常|异常|停用|过期)', line).group(1)
         domain = domain_match.group(1)
 
         # 取当前域名到下一个域名之间作为一个 block
@@ -153,6 +171,7 @@ def parse_text(text):
         # 查找到期时间
         expire_date = ""
         expire_days = ""
+        remaining_days = None
 
         for x in block:
             m = DATE_RE.match(x)
@@ -161,7 +180,8 @@ def parse_text(text):
                 expire_date = m.group(1)
 
                 if m.group(2) is not None:
-                    expire_days = f"{m.group(2)}天"
+                    remaining_days = int(m.group(2))
+                    expire_days = f"{remaining_days}天"
 
                 break
 
@@ -171,6 +191,12 @@ def parse_text(text):
             "expire_date": expire_date,
             "expire_days": expire_days,
             "raw_category": category_label or "",
+            "status": status,
+            "is_expired": is_record_expired(
+                status,
+                expire_date,
+                remaining_days,
+            ),
         })
 
     return records
@@ -272,6 +298,7 @@ def create_excel(records, output_file, title="域名信息"):
     # =========================
 
     max_rows = 0
+    expired_font = Font(color="FFFF0000")
 
     for index, category in enumerate(categories):
 
@@ -290,17 +317,21 @@ def create_excel(records, output_file, title="域名信息"):
             start=3
         ):
 
-            ws.cell(
+            domain_cell = ws.cell(
                 row=row_index,
                 column=domain_col,
                 value=item["domain"]
             )
 
-            ws.cell(
+            expire_cell = ws.cell(
                 row=row_index,
                 column=expire_col,
                 value=item["expire_days"]
             )
+
+            if item.get("is_expired"):
+                domain_cell.font = expired_font
+                expire_cell.font = expired_font
 
     # =========================
     # 样式

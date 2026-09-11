@@ -6,7 +6,7 @@ from pathlib import Path
 from openpyxl import load_workbook
 
 from app import create_app
-from domain_to_excel import parse_text
+from domain_to_excel import create_excel_bytes, parse_text
 
 
 SAMPLE_TEXT = """DEMO-000
@@ -28,6 +28,22 @@ ns-1.example.com
 备案域名已退回
 2027-02-10 09:34:21(151天)
 使用中
+"""
+
+EXPIRY_TEXT = """DEMO-000
+正常past-example.com
+DEMO-000-WEB
+2000-01-01 00:00:00(519天)
+
+DEMO-000
+过期status-example.com
+DEMO-000-WEB
+2999-01-01 00:00:00(999天)
+
+DEMO-000
+正常future-example.com
+DEMO-000-WEB
+2999-01-01 00:00:00(999天)
 """
 
 
@@ -103,6 +119,18 @@ class AppTestCase(unittest.TestCase):
         records = parse_text(UNKNOWN_CATEGORY_TEXT)
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0]["category"], "DEMO-SEO")
+
+    def test_expired_domain_and_expiry_cells_are_red(self):
+        records = parse_text(EXPIRY_TEXT)
+        self.assertEqual([record["is_expired"] for record in records], [True, True, False])
+
+        output, _, _ = create_excel_bytes(records)
+        sheet = load_workbook(output, read_only=False).active
+        for address in ("A3", "B3", "A4", "B4"):
+            self.assertEqual(sheet[address].font.color.type, "rgb")
+            self.assertEqual(sheet[address].font.color.rgb, "FFFF0000")
+        for address in ("A5", "B5"):
+            self.assertNotEqual(sheet[address].font.color.type, "rgb")
 
 
 if __name__ == "__main__":
