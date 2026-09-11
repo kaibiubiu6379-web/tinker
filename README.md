@@ -46,6 +46,42 @@ docker compose down
 
 `.env` 不会被提交。`TINKER_SECRET_KEY` 应使用足够长的随机字符串；启用 HTTPS 后，将 `TINKER_SECURE_COOKIE` 设置为 `1`。
 
+### 通过代理构建镜像
+
+Docker daemon 的代理只负责拉取基础镜像，Dockerfile 中的 `pip install` 还需要构建代理。可在服务器未提交的 `.env` 中配置：
+
+```dotenv
+HTTP_PROXY=http://proxy-host:port
+HTTPS_PROXY=http://proxy-host:port
+NO_PROXY=localhost,127.0.0.1
+```
+
+然后重新构建：
+
+```bash
+docker compose build --no-cache
+docker compose up -d
+```
+
+如果基础镜像也无法拉取，需要同时为 Linux Docker daemon 配置代理。执行 `sudo systemctl edit docker`，填写：
+
+```ini
+[Service]
+Environment="HTTP_PROXY=http://proxy-host:port"
+Environment="HTTPS_PROXY=http://proxy-host:port"
+Environment="NO_PROXY=localhost,127.0.0.1"
+```
+
+保存后应用配置：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+sudo systemctl show --property=Environment docker
+```
+
+变量名和代理 URL 必须是纯文本，不要包含 Markdown 的反斜杠或 `[地址](地址)` 形式。代理凭据和真实内网地址不要提交到仓库。
+
 ## 生产运行
 
 Windows 可以使用 Waitress：
