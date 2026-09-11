@@ -334,10 +334,18 @@ def create_excel(records, output_file, title="域名信息"):
                 value=item["domain"]
             )
 
+            expire_days = item["expire_days"]
+            if item.get("is_expired"):
+                expire_days = (
+                    f"{expire_days}(已过期)"
+                    if expire_days
+                    else "已过期"
+                )
+
             expire_cell = ws.cell(
                 row=row_index,
                 column=expire_col,
-                value=item["expire_days"]
+                value=expire_days
             )
 
             expire_date = item.get("expire_date", "")

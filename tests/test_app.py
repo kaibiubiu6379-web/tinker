@@ -139,6 +139,9 @@ class AppTestCase(unittest.TestCase):
             self.assertEqual(sheet[address].font.color.rgb, "FFFF0000")
         for address in ("A5", "B5", "C5"):
             self.assertNotEqual(sheet[address].font.color.type, "rgb")
+        self.assertEqual(sheet["B3"].value, "519天(已过期)")
+        self.assertEqual(sheet["B4"].value, "999天(已过期)")
+        self.assertEqual(sheet["B5"].value, "999天")
         self.assertIsInstance(sheet["C3"].value, datetime)
         self.assertEqual(sheet["C3"].number_format, "yyyy-mm-dd hh:mm:ss")
 
