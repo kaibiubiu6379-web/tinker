@@ -1,6 +1,7 @@
 import io
 import re
 import unittest
+from datetime import datetime
 from pathlib import Path
 
 from openpyxl import load_workbook
@@ -91,12 +92,19 @@ class AppTestCase(unittest.TestCase):
             response.headers["Content-Disposition"],
             re.compile(r"filename\*=UTF-8''%E6%B5%8B%E8%AF%95%E5%9F%9F%E5%90%8D-\d{8}-\d{6}\.xlsx"),
         )
-        workbook = load_workbook(io.BytesIO(response.data), read_only=True)
+        workbook = load_workbook(io.BytesIO(response.data), read_only=False)
         sheet = workbook.active
         self.assertEqual(sheet["A2"].value, "WEB")
-        self.assertEqual(sheet["C2"].value, "H5")
+        self.assertEqual(sheet["B2"].value, "过期时间")
+        self.assertEqual(sheet["C2"].value, "日期")
+        self.assertIsNone(sheet["D2"].value)
+        self.assertEqual(sheet["E2"].value, "H5")
         self.assertEqual(sheet["A3"].value, "example-web.com")
-        self.assertEqual(sheet["C3"].value, "example-h5.com")
+        self.assertIsInstance(sheet["C3"].value, datetime)
+        self.assertIsNone(sheet["D3"].value)
+        for side in ("left", "right", "top", "bottom"):
+            self.assertIsNone(getattr(sheet["D2"].border, side).style)
+        self.assertEqual(sheet["E3"].value, "example-h5.com")
 
     def test_file_upload_returns_excel(self):
         csrf_token = self.login()
@@ -126,11 +134,13 @@ class AppTestCase(unittest.TestCase):
 
         output, _, _ = create_excel_bytes(records)
         sheet = load_workbook(output, read_only=False).active
-        for address in ("A3", "B3", "A4", "B4"):
+        for address in ("A3", "B3", "C3", "A4", "B4", "C4"):
             self.assertEqual(sheet[address].font.color.type, "rgb")
             self.assertEqual(sheet[address].font.color.rgb, "FFFF0000")
-        for address in ("A5", "B5"):
+        for address in ("A5", "B5", "C5"):
             self.assertNotEqual(sheet[address].font.color.type, "rgb")
+        self.assertIsInstance(sheet["C3"].value, datetime)
+        self.assertEqual(sheet["C3"].number_format, "yyyy-mm-dd hh:mm:ss")
 
 
 if __name__ == "__main__":

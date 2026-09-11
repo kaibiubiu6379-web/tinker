@@ -239,7 +239,10 @@ def create_excel(records, output_file, title="域名信息"):
     ws = wb.active
     ws.title = "域名信息"
 
-    total_cols = len(categories) * 2
+    columns_per_category = 3
+    category_stride = 4
+    # 每个分类占 3 列，分类之间留 1 列空白；最后一个分类后不留空列。
+    total_cols = len(categories) * category_stride - 1
 
     # =========================
     # 第一行标题
@@ -278,8 +281,9 @@ def create_excel(records, output_file, title="域名信息"):
 
     for index, category in enumerate(categories):
 
-        domain_col = index * 2 + 1
-        expire_col = index * 2 + 2
+        domain_col = index * category_stride + 1
+        expire_col = domain_col + 1
+        date_col = domain_col + 2
 
         ws.cell(
             row=2,
@@ -293,6 +297,12 @@ def create_excel(records, output_file, title="域名信息"):
             value="过期时间"
         )
 
+        ws.cell(
+            row=2,
+            column=date_col,
+            value="日期"
+        )
+
     # =========================
     # 写数据
     # =========================
@@ -302,8 +312,9 @@ def create_excel(records, output_file, title="域名信息"):
 
     for index, category in enumerate(categories):
 
-        domain_col = index * 2 + 1
-        expire_col = index * 2 + 2
+        domain_col = index * category_stride + 1
+        expire_col = domain_col + 1
+        date_col = domain_col + 2
 
         items = grouped[category]
 
@@ -329,9 +340,27 @@ def create_excel(records, output_file, title="域名信息"):
                 value=item["expire_days"]
             )
 
+            expire_date = item.get("expire_date", "")
+            try:
+                expire_date = datetime.strptime(
+                    expire_date,
+                    "%Y-%m-%d %H:%M:%S"
+                )
+            except (TypeError, ValueError):
+                pass
+
+            date_cell = ws.cell(
+                row=row_index,
+                column=date_col,
+                value=expire_date
+            )
+            if isinstance(expire_date, datetime):
+                date_cell.number_format = "yyyy-mm-dd hh:mm:ss"
+
             if item.get("is_expired"):
                 domain_cell.font = expired_font
                 expire_cell.font = expired_font
+                date_cell.font = expired_font
 
     # =========================
     # 样式
@@ -349,56 +378,66 @@ def create_excel(records, output_file, title="域名信息"):
         bottom=thin
     )
 
-    # 标题下面所有区域加边框
-    for row in ws.iter_rows(
-        min_row=2,
-        max_row=max_rows + 2,
-        min_col=1,
-        max_col=total_cols
-    ):
+    # 只给分类数据区域加边框，分类之间的空白列保持无边框。
+    for index in range(len(categories)):
+        first_col = index * category_stride + 1
+        last_col = first_col + columns_per_category - 1
 
-        for cell in row:
+        for row in ws.iter_rows(
+            min_row=2,
+            max_row=max_rows + 2,
+            min_col=first_col,
+            max_col=last_col
+        ):
 
-            cell.border = border
+            for cell in row:
 
-            cell.alignment = Alignment(
-                vertical="center"
-            )
+                cell.border = border
+
+                cell.alignment = Alignment(
+                    vertical="center"
+                )
 
     # 表头加粗
-    for cell in ws[2]:
+    for index in range(len(categories)):
+        first_col = index * category_stride + 1
 
-        cell.font = Font(
-            bold=True
-        )
+        for col in range(first_col, first_col + columns_per_category):
+            cell = ws.cell(row=2, column=col)
 
-        cell.alignment = Alignment(
-            horizontal="left",
-            vertical="center"
-        )
+            cell.font = Font(
+                bold=True
+            )
+
+            cell.alignment = Alignment(
+                horizontal="left",
+                vertical="center"
+            )
 
     # =========================
     # 列宽
     # =========================
 
-    for col in range(
-        1,
-        total_cols + 1
-    ):
+    for index in range(len(categories)):
+        domain_col = index * category_stride + 1
+        expire_col = domain_col + 1
+        date_col = domain_col + 2
 
-        column_letter = get_column_letter(col)
+        ws.column_dimensions[
+            get_column_letter(domain_col)
+        ].width = 22
+        ws.column_dimensions[
+            get_column_letter(expire_col)
+        ].width = 12
+        ws.column_dimensions[
+            get_column_letter(date_col)
+        ].width = 21
 
-        if col % 2 == 1:
-            # 域名
+        if index < len(categories) - 1:
+            spacer_col = domain_col + 3
             ws.column_dimensions[
-                column_letter
-            ].width = 22
-
-        else:
-            # 过期时间
-            ws.column_dimensions[
-                column_letter
-            ].width = 12
+                get_column_letter(spacer_col)
+            ].width = 3
 
     # 冻结表头
     ws.freeze_panes = "A3"
