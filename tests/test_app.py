@@ -6,6 +6,7 @@ from pathlib import Path
 from openpyxl import load_workbook
 
 from app import create_app
+from domain_to_excel import parse_text
 
 
 SAMPLE_TEXT = """DEMO-000
@@ -19,6 +20,14 @@ DEMO-000
 ns-2.example.com
 DEMO-000-WEB
 2027-04-25 16:46:19(226天)
+"""
+
+UNKNOWN_CATEGORY_TEXT = """DEMO-SEO 备案域名
+正常seo-example.com
+ns-1.example.com
+备案域名已退回
+2027-02-10 09:34:21(151天)
+使用中
 """
 
 
@@ -89,6 +98,11 @@ class AppTestCase(unittest.TestCase):
         self.login()
         response = self.client.post("/api/convert", data={"text": SAMPLE_TEXT})
         self.assertEqual(response.status_code, 403)
+
+    def test_unknown_category_uses_first_field_of_header(self):
+        records = parse_text(UNKNOWN_CATEGORY_TEXT)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["category"], "DEMO-SEO")
 
 
 if __name__ == "__main__":

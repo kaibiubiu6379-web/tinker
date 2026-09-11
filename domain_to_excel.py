@@ -72,6 +72,21 @@ def classify_category(label):
     return "未分类"
 
 
+def infer_category_from_header(lines, domain_index):
+    """Use the first field of the line before a domain as a dynamic category."""
+    for index in range(domain_index - 1, -1, -1):
+        header = lines[index].strip()
+        if not header:
+            continue
+
+        first_field = header.split(maxsplit=1)[0]
+        if re.fullmatch(r"[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*", first_field):
+            return first_field
+        break
+
+    return "未分类"
+
+
 def parse_text(text):
     """Parse domain records from pasted or uploaded text."""
     lines = [
@@ -132,6 +147,8 @@ def parse_text(text):
                 break
 
         category = classify_category(category_label)
+        if category == "未分类":
+            category = infer_category_from_header(lines, i)
 
         # 查找到期时间
         expire_date = ""

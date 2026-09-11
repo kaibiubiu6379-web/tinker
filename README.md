@@ -103,3 +103,5 @@ $env:TINKER_SECURE_COOKIE = "1"
 - `POST /api/logout`：退出当前会话。
 
 上传内容最大 2 MB，目前支持 UTF-8、UTF-8 BOM 和 GB18030 编码的 `.txt`、`.log` 文件。
+
+系统优先使用内置业务分类。无法识别内置分类时，会将域名前一行的第一个字段作为动态分类，例如 `DEMO-SEO 备案域名` 会归入 `DEMO-SEO`。
