@@ -22,8 +22,36 @@ CATEGORY_ORDER = [
     "代理后台",
     "代理H5",
     "管理后台",
+    "体育APP",
+    "未使用",
+    "网站域名",
+    "代理域名",
+    "站点专属自用-H5",
+    "站点专属自用-WEB",
+    "站点专属自用-APP",
+    "站点专属自用-体育APP",
+    "好记-H5",
+    "品牌域名",
+]
+
+# 先判断更具体的名称，避免“站点专属自用-H5”等被归入普通 H5。
+CATEGORY_KEYS = [
+    "站点专属自用-体育APP",
+    "站点专属自用-H5",
+    "站点专属自用-WEB",
+    "站点专属自用-APP",
+    "好记-H5",
+    "代理后台",
+    "管理后台",
+    "代理H5",
     "代理域名",
     "品牌域名",
+    "全站APP",
+    "体育APP",
+    "未使用",
+    "网站域名",
+    "WEB",
+    "H5",
 ]
 
 # 域名
@@ -54,19 +82,7 @@ def classify_category(label):
     if not label:
         return "未分类"
 
-    # 注意顺序，代理H5 必须在 H5 前判断
-    category_keys = [
-        "代理后台",
-        "管理后台",
-        "代理H5",
-        "代理域名",
-        "品牌域名",
-        "全站APP",
-        "WEB",
-        "H5",
-    ]
-
-    for key in category_keys:
+    for key in CATEGORY_KEYS:
         if key in label:
             return key
 
@@ -157,10 +173,7 @@ def parse_text(text):
         category_label = None
 
         for x in block:
-            if re.search(
-                r'-(WEB|H5|全站APP|代理后台|代理H5|管理后台|代理域名|品牌域名)',
-                x
-            ):
+            if any(f"-{key}" in x for key in CATEGORY_KEYS):
                 category_label = x
                 break
 

@@ -47,6 +47,24 @@ DEMO-000-WEB
 2999-01-01 00:00:00(999天)
 """
 
+SCREENSHOT_CATEGORIES = [
+    "WEB",
+    "H5",
+    "全站APP",
+    "代理后台",
+    "代理H5",
+    "管理后台",
+    "体育APP",
+    "未使用",
+    "网站域名",
+    "代理域名",
+    "站点专属自用-H5",
+    "站点专属自用-WEB",
+    "站点专属自用-APP",
+    "站点专属自用-体育APP",
+    "好记-H5",
+]
+
 
 class AppTestCase(unittest.TestCase):
     def setUp(self):
@@ -127,6 +145,29 @@ class AppTestCase(unittest.TestCase):
         records = parse_text(UNKNOWN_CATEGORY_TEXT)
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0]["category"], "DEMO-SEO")
+
+    def test_all_screenshot_categories_are_recognized_and_ordered(self):
+        blocks = []
+        for index, category in reversed(list(enumerate(SCREENSHOT_CATEGORIES))):
+            blocks.append(
+                "\n".join(
+                    [
+                        "DEMO-000",
+                        f"正常case{index}.example",
+                        f"DEMO-000-{category}",
+                        "2999-01-01 00:00:00(999天)",
+                    ]
+                )
+            )
+
+        records = parse_text("\n\n".join(blocks))
+        self.assertEqual(
+            {record["category"] for record in records},
+            set(SCREENSHOT_CATEGORIES),
+        )
+
+        _, categories, _ = create_excel_bytes(records)
+        self.assertEqual(categories, SCREENSHOT_CATEGORIES)
 
     def test_expired_domain_and_expiry_cells_are_red(self):
         records = parse_text(EXPIRY_TEXT)
